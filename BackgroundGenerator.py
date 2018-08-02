@@ -35,6 +35,7 @@ if pics_height * 250 > result_height:
 print("The dimensions of the result image are " + str(result_width)
       + " x " + str(result_height))
 
+# builds the resulting background image
 result = Image.new('RGB', (result_width, result_height))
 
 index = 0
@@ -52,6 +53,7 @@ for y in range(pics_height):
 
 result.save('result.jpg')
 
+# sets the image as the desktop background
 SPI_SETDESKWALLPAPER = 20 
 ctypes.windll.user32.SystemParametersInfoW(
     SPI_SETDESKWALLPAPER, 0,
