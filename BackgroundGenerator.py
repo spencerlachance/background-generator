@@ -1,64 +1,76 @@
-import os, math, ctypes
-from PIL import Image
+import ctypes
+import math
+import os
+from pathlib import Path
+
 from natsort import natsorted
+from PIL import Image
+
+# The dimensions ratio of the screen that the background image will fill
+RATIO = 16/9
+
+
+def calculate_grid_dimensions(num_pics):
+    """
+    Calculate the dimensions of the grid of images that best fits the screen.
+
+    :param num_pics: The number of images to arrange
+    :return: A tuple containing the width and height of the grid
+    """
+    width = 0
+    prev_diff = 100
+    diff = 99
+    # Until the dimensions are as close to the RATIO defined above as possible, increase
+    # the width and recalculate them
+    while math.fabs(prev_diff) > math.fabs(diff):
+        width += 1
+        height = math.ceil(num_pics / width)
+        prev_diff = diff
+        diff = RATIO - width / height
+    # Because the loop runs one extra time after finding the optimal dimensions
+    width = width - 1
+    return width, math.ceil(num_pics / width)    
+
 
 def generate_bg(dir):
+    """
+    Read the images in the input directory, generate a desktop background from them, 
+    and save it to a file.
+
+    :param dir: Path to the directory containing the album arts for the background
+    """
     pics = os.listdir(dir)
     pics = natsorted(pics)
     num_pics = len(pics)
 
-    # calculates the dimensions of the grid that will best fit the 16x9 ratio screen
-    ratio = 16 / 9
-    w = 1
-    prev_diff = 100
-    diff = 99
-    while math.fabs(prev_diff) > math.fabs(diff):
-        prev_diff = diff
-        h = math.ceil(num_pics / w)
-        diff = ratio - w / h
-        w += 1
+    # Calculate the dimensions in number of pictures
+    pics_width, pics_height = calculate_grid_dimensions(num_pics)
 
-    # dimensions in number of pictures
-    pics_width = w - 2
-    pics_height = math.ceil(num_pics / pics_width)
+    print(f"The image will be {str(pics_width)} x {str(pics_height)} album arts.")
 
-    print("The image will be " + str(pics_width) + " x " + str(pics_height) + " arts")
+    # Calculate the dimensions of the final image in pixels
+    # (Each album art will be forced to 250x250 pixels)
+    pixel_width = pics_width * 250
+    pixel_height = pics_height * 250
 
-    # dimensions of the final image in pixels
-    result_width = pics_width * 250
-    result_height = int(result_width * 9 / 16)
+    print(
+        f"The dimensions of the result image are {str(pixel_width)} x "
+        f"{str(pixel_height)}"
+    )
 
-    if pics_height * 250 > result_height:
-        result_height = pics_height * 250
-        result_width = pics_width * 250
+    # Build the resulting background image
+    result = Image.new('RGB', (pixel_width, pixel_height))
 
-    print("The dimensions of the result image are " + str(result_width)
-        + " x " + str(result_height))
-
-    # builds the resulting background image
-    result_height += math.ceil(result_height / 27)
-    result = Image.new('RGB', (result_width, result_height))
-
-    index = 0
+    pics_idx = 0
     for y in range(pics_height):
-        if index >= num_pics:
-                break
         for x in range(pics_width):
-            if index >= num_pics:
+            if pics_idx >= num_pics:
                 break
-            im = Image.open(dir + "\\" + pics[index])
-            if x * 250 > result_width or y * 250 > result_height:
-                print("ERROR")
-            result.paste(im.resize((250, 250)), (x * 250, y * 250))
-            index += 1
+            album_art = Image.open(Path(dir).joinpath(pics[pics_idx]))
+            result.paste(album_art.resize((250, 250)), (x * 250, y * 250))
+            pics_idx += 1
 
-    result.save('results/' + dir + '.jpg')
+    result.save(Path("results").joinpath(f"{dir}.jpg"))
 
-# sets the image as the desktop background
-# SPI_SETDESKWALLPAPER = 20 
-# ctypes.windll.user32.SystemParametersInfoW(
-#     SPI_SETDESKWALLPAPER, 0,
-#     "C:\\Users\\Spencer LaChance\\Pictures\\Desktop Background\\result.jpg" , 0)
 
-generate_bg("Arts1")
-generate_bg("Arts2")
+generate_bg("test")
