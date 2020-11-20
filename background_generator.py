@@ -70,7 +70,11 @@ def generate_bg(dir):
             result.paste(album_art.resize((250, 250)), (x * 250, y * 250))
             pics_idx += 1
 
-    result.save(Path(f"{dir}.jpg"))
+    filename = dir.replace(" ", "")
+    print(f"Saving image to {filename}.jpg")
+    result.save(Path(f"{filename}.jpg"))
 
 
-generate_bg("test")
+if __name__ == "__main__":
+    print("Please enter a path to a folder of album arts:")
+    generate_bg(input())
