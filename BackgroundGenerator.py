@@ -70,7 +70,7 @@ def generate_bg(dir):
             result.paste(album_art.resize((250, 250)), (x * 250, y * 250))
             pics_idx += 1
 
-    result.save(Path("results").joinpath(f"{dir}.jpg"))
+    result.save(Path(f"{dir}.jpg"))
 
 
 generate_bg("test")
